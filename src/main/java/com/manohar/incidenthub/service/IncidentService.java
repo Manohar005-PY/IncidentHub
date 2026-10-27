@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.manohar.incidenthub.model.Incident;
+import com.manohar.incidenthub.model.IncidentStatus;
 import com.manohar.incidenthub.repositroy.IncidentRepositroy;
 
 @Service
@@ -20,7 +21,7 @@ public class IncidentService {
     }
 
     public Incident createIncident(String title,String severity){
-        Incident incident = new Incident(title, severity, "OPEN");
+        Incident incident = new Incident(title, severity, IncidentStatus.OPEN);
 
         return incidentRepositroy.save(incident);
     }

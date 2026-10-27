@@ -9,7 +9,6 @@ import com.manohar.incidenthub.service.IncidentService;
 import jakarta.validation.Valid;
 
 import java.net.URI;
-import java.net.URL;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

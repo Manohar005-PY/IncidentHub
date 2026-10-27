@@ -2,6 +2,8 @@ package com.manohar.incidenthub.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -22,13 +24,13 @@ public class Incident {
     private String severity;
 
     @Column(nullable = false, length = 30)
-    private String status;
-
+    @Enumerated(EnumType.STRING)
+    private IncidentStatus status;
     protected Incident() {
         
     }
 
-    public Incident(String title, String severity, String status) {
+    public Incident(String title, String severity, IncidentStatus status) {
         this.title = title;
         this.severity = severity;
         this.status = status;
@@ -46,7 +48,7 @@ public class Incident {
         return severity;
     }
 
-    public String getStatus() {
+    public IncidentStatus getStatus() {
         return status;
     }
 }
