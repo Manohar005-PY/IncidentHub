@@ -18,4 +18,10 @@ public class IncidentService {
     public Optional<Incident> getIncidentById(Long id) {
         return incidentRepositroy.findById(id);
     }
+
+    public Incident createIncident(String title,String severity){
+        Incident incident = new Incident(title, severity, "OPEN");
+
+        return incidentRepositroy.save(incident);
+    }
 }

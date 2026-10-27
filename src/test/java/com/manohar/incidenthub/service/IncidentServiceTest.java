@@ -25,14 +25,14 @@ public class IncidentServiceTest {
 
     @Test
     void shouldReturnIncidentWhenExists(){
-        Incident expected = new Incident("Payment Service is Unavilable", "HIGH", "OPEN");
+        Incident expected = new Incident("payment service is unavilable", "HIGH", "OPEN");
 
         when(incidentRepository.findById(123L)).thenReturn(Optional.of(expected));
         
         Optional<Incident> result = incidentService.getIncidentById(123L);
 
         assertTrue(result.isPresent());
-        assertEquals("Payment Service is unavilable", result.get().getTitle());
+        assertEquals("payment service is unavilable", result.get().getTitle());
         assertEquals("OPEN", result.get().getStatus());
     }
 
