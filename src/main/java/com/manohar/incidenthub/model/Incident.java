@@ -40,6 +40,22 @@ public class Incident {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setSeverity(String severity) {
+        this.severity = severity;
+    }
+
+    public void setStatus(IncidentStatus status) {
+        this.status = status;
+    }
+
     public String getTitle() {
         return title;
     }

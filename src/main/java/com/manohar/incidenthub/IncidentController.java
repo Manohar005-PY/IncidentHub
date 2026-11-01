@@ -3,6 +3,7 @@ package com.manohar.incidenthub;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.manohar.incidenthub.dto.CreateIncidentRequest;
+import com.manohar.incidenthub.dto.UpdateIncidentStatusRequest;
 import com.manohar.incidenthub.model.Incident;
 import com.manohar.incidenthub.service.IncidentService;
 
@@ -13,6 +14,7 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,6 +49,13 @@ public class IncidentController {
         URI location = URI.create("/api/incidents/" + created.getId());
 
         return ResponseEntity.created(location).body(created);
+    }
+    @PatchMapping("/api/incidents/{id}/status")
+    public ResponseEntity <Incident> updateIncidentStatus(@PathVariable Long id, @RequestBody @Valid UpdateIncidentStatusRequest request){
+        Incident updated  = incidentService.transitionStatus(id, request.getStatus());
+
+        return ResponseEntity.ok(updated);
+        
     }
     
 }
