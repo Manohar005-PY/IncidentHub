@@ -10,6 +10,8 @@ import com.manohar.incidenthub.model.Incident;
 import com.manohar.incidenthub.model.IncidentStatus;
 import com.manohar.incidenthub.repositroy.IncidentRepositroy;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 public class IncidentService {
     private final IncidentRepositroy incidentRepositroy;
@@ -17,17 +19,20 @@ public class IncidentService {
     public IncidentService(IncidentRepositroy incidentRepositroy) {
         this.incidentRepositroy = incidentRepositroy;
     }
-
+    @Transactional(readOnly = true)
     public Optional<Incident> getIncidentById(Long id) {
         return incidentRepositroy.findById(id);
     }
 
+    @Transactional 
     public Incident createIncident(String title, String severity) {
         Incident incident = new Incident(title, severity, IncidentStatus.OPEN);
 
+        incident.setStatus(IncidentStatus.OPEN);
         return incidentRepositroy.save(incident);
     }
 
+    @Transactional
     public Incident transitionStatus(Long id, IncidentStatus newStatus) {
         Incident incident = incidentRepositroy.findById(id)
                 .orElseThrow(() -> new IncidentNotFoundException(id));
@@ -44,6 +49,6 @@ public class IncidentService {
             throw new InvalidStatusTransitionException(currentStatus, newStatus);
         }
         incident.setStatus(newStatus);
-        return incidentRepositroy.save(incident);
+        return incident;
     }
 }

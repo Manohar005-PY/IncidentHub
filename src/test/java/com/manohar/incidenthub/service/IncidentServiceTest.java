@@ -75,13 +75,9 @@ public class IncidentServiceTest {
 
         when(incidentRepository.findById(1L)).thenReturn(Optional.of(expected));
 
-        when(incidentRepository.save(any(Incident.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-
         Incident incident = incidentService.transitionStatus(1L, IncidentStatus.ACKNOWLEDGED);
 
         assertEquals(IncidentStatus.ACKNOWLEDGED, incident.getStatus());
-        verify(incidentRepository).save(expected);
     }
 
     @Test
@@ -106,8 +102,6 @@ public class IncidentServiceTest {
         assertTrue(exception.getMessage().contains("Incident with id 1 not found"));
 
         verify(incidentRepository,never()).save(any(Incident.class));
-
-
     }
 
 }
