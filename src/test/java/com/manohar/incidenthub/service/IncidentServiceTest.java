@@ -17,6 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.manohar.incidenthub.exception.IncidentNotFoundException;
+import com.manohar.incidenthub.exception.InvalidStatusTransitionException;
 import com.manohar.incidenthub.model.Incident;
 import com.manohar.incidenthub.model.IncidentStatus;
 import com.manohar.incidenthub.repositroy.IncidentRepositroy;
@@ -88,7 +90,7 @@ public class IncidentServiceTest {
 
         when(incidentRepository.findById(1L)).thenReturn(Optional.of(expected));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> incidentService.transitionStatus(1L, IncidentStatus.RESOLVED));
+        InvalidStatusTransitionException exception = assertThrows(InvalidStatusTransitionException.class, () -> incidentService.transitionStatus(1L, IncidentStatus.RESOLVED));
 
         assertTrue(exception.getMessage().contains("Invalid status transition"));
 
@@ -99,9 +101,9 @@ public class IncidentServiceTest {
     void shouldThrowExceptionWhenIncidentNotFoundForStatusTransition(){
         when(incidentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> incidentService.transitionStatus(1L, IncidentStatus.ACKNOWLEDGED));
+        IncidentNotFoundException exception = assertThrows(IncidentNotFoundException.class, () -> incidentService.transitionStatus(1L, IncidentStatus.ACKNOWLEDGED));
 
-        assertTrue(exception.getMessage().contains("Incident not found" + 1L));
+        assertTrue(exception.getMessage().contains("Incident with id 1 not found"));
 
         verify(incidentRepository,never()).save(any(Incident.class));
 

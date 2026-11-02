@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.manohar.incidenthub.exception.IncidentNotFoundException;
+import com.manohar.incidenthub.exception.InvalidStatusTransitionException;
 import com.manohar.incidenthub.model.Incident;
 import com.manohar.incidenthub.model.IncidentStatus;
 import com.manohar.incidenthub.repositroy.IncidentRepositroy;
@@ -28,7 +30,7 @@ public class IncidentService {
 
     public Incident transitionStatus(Long id, IncidentStatus newStatus) {
         Incident incident = incidentRepositroy.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Incident not found" + id));
+                .orElseThrow(() -> new IncidentNotFoundException(id));
 
         IncidentStatus currentStatus = incident.getStatus();
         boolean allowed = switch (currentStatus) {
@@ -39,7 +41,7 @@ public class IncidentService {
         };
 
         if (!allowed) {
-            throw new IllegalArgumentException("Invalid status transition from " + currentStatus + " to " + newStatus);
+            throw new InvalidStatusTransitionException(currentStatus, newStatus);
         }
         incident.setStatus(newStatus);
         return incidentRepositroy.save(incident);
