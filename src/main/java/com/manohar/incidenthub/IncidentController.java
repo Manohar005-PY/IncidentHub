@@ -16,7 +16,6 @@ import java.net.URI;
 import java.util.Locale;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -35,17 +34,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RestController 
 public class IncidentController {
     private final IncidentService incidentService;
-    private static final Set<String> ALLOWED_SORT_FEILDS = Set.of("id", "title", "severity", "status","version");
+    private static final Set<String> ALLOWED_SORT_FEILDS = Set.of("id", "title", "severity", "status","version","createdAt", "updatedAt");
 
     private static final Set<String> ALLOWED_SEVERITY_VALUES = Set.of("LOW", "MEDIUM", "HIGH", "CRITICAL");
 
-    @Autowired
     public IncidentController(IncidentService incidentService)
     {
         this.incidentService = incidentService;
     }
 
-    @GetMapping("/api/incident/{id}")
+    @GetMapping("/api/incidents/{id}")
     public ResponseEntity<Incident> getIncident(@PathVariable  Long id)
     {   
         
@@ -77,7 +75,8 @@ public class IncidentController {
         @RequestParam(required = false) String status,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,
-        @RequestParam(defaultValue = "id") String sortBy
+        @RequestParam(defaultValue = "createdAt") String sortBy,
+        @RequestParam(defaultValue = "desc") String direction
     ){
         if (page < 0){
             throw new InvalidIncidentQueryException("Page number cannot be negative");
@@ -89,9 +88,8 @@ public class IncidentController {
             throw new InvalidIncidentQueryException("Invalid sort field: " + sortBy);
         }
         Sort.Direction sortDirection;
-        
         try{
-            sortDirection = Sort.Direction.fromString("ASC");
+            sortDirection = Sort.Direction.fromString(direction);
         } catch (IllegalArgumentException e){
             throw new InvalidIncidentQueryException("Direction must be ASC or DESC");
         }
@@ -110,7 +108,11 @@ public class IncidentController {
                 throw new InvalidIncidentQueryException("Invalid status value: " + status);
             }
         }
-        Pageable pageable = PageRequest.of(page, size, sortDirection, sortBy);
+        Sort sort = Sort.by(sortDirection, sortBy);
+        if (!sortBy.equals("id")){
+            sort = sort.and(Sort.by(Sort.Direction.DESC,"id"));
+        }
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page <Incident> result = incidentService.searchIncidents(severity, statusFilter != null ? statusFilter.name() : null, pageable);
         return ResponseEntity.ok(PageResponse.from(result));

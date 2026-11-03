@@ -1,7 +1,14 @@
 package com.manohar.incidenthub.model;
 
+import java.time.Instant;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +19,7 @@ import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "incidents")
+@EntityListeners(AuditingEntityListener.class)
 public class Incident {
 
     @Id
@@ -27,6 +35,15 @@ public class Incident {
     @Column(nullable = false, length = 30)
     @Enumerated(EnumType.STRING)
     private IncidentStatus status;
+
+    @CreatedDate
+    @Column (name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @LastModifiedDate
+    @Column(name  = "updated_at", nullable = false)
+    private Instant updatedAt;
+
     protected Incident() {
         
     }
@@ -69,7 +86,17 @@ public class Incident {
         return status;
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
     @Version
     @Column(nullable = false)
     private Long version;
+
+
 }

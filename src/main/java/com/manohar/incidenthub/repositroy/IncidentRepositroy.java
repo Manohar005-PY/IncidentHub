@@ -19,6 +19,6 @@ public interface IncidentRepositroy
         Page<Incident> searchIncidents(
             @Param("severity") String severity,
             @Param("status") String status,
-            Pageable pageable
+              Pageable pageable
         );
 }

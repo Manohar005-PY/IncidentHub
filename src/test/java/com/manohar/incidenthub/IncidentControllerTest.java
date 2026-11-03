@@ -49,6 +49,9 @@ class IncidentControllerTest {
 
     @Test
     void shouldListIncidentsSuccessfully() throws Exception {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt")
+                .and(Sort.by(Sort.Direction.DESC, "id"));
+        PageRequest pageRequest = PageRequest.of(0, 10, sort);
         Incident incident = new Incident(
                 "Database connection failed",
                 "HIGH",
@@ -57,9 +60,8 @@ class IncidentControllerTest {
         when(incidentService.searchIncidents(
                 isNull(),
                 isNull(),
-                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")))))
-                .thenReturn(new PageImpl<>(List.of(incident),
-                        PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")), 1));
+                eq(pageRequest)))
+                .thenReturn(new PageImpl<>(List.of(incident), pageRequest, 1));
 
         mockMvc.perform(get("/api/incidents"))
                 .andExpect(status().isOk())
@@ -74,17 +76,19 @@ class IncidentControllerTest {
         verify(incidentService).searchIncidents(
                 isNull(),
                 isNull(),
-                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"))));
+                eq(pageRequest));
     }
 
     @Test
     void shouldListIncidentsWithSeverityFilter() throws Exception {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt")
+                .and(Sort.by(Sort.Direction.DESC, "id"));
+        PageRequest pageRequest = PageRequest.of(0, 10, sort);
         when(incidentService.searchIncidents(
                 eq("HIGH"),
                 isNull(),
-                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")))))
-                .thenReturn(new PageImpl<>(List.of(),
-                        PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")), 0));
+                eq(pageRequest)))
+                .thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
 
         mockMvc.perform(get("/api/incidents").param("severity", "HIGH"))
                 .andExpect(status().isOk());
@@ -92,17 +96,19 @@ class IncidentControllerTest {
         verify(incidentService).searchIncidents(
                 eq("HIGH"),
                 isNull(),
-                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"))));
+                eq(pageRequest));
     }
 
     @Test
     void shouldListIncidentsWithStatusFilter() throws Exception {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt")
+                .and(Sort.by(Sort.Direction.DESC, "id"));
+        PageRequest pageRequest = PageRequest.of(0, 10, sort);
         when(incidentService.searchIncidents(
                 isNull(),
                 eq("ACKNOWLEDGED"),
-                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")))))
-                .thenReturn(new PageImpl<>(List.of(),
-                        PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")), 0));
+                eq(pageRequest)))
+                .thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
 
         mockMvc.perform(get("/api/incidents").param("status", "ACKNOWLEDGED"))
                 .andExpect(status().isOk());
@@ -110,7 +116,7 @@ class IncidentControllerTest {
         verify(incidentService).searchIncidents(
                 isNull(),
                 eq("ACKNOWLEDGED"),
-                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"))));
+                eq(pageRequest));
     }
 
     @Test
@@ -131,7 +137,31 @@ class IncidentControllerTest {
 
     @Test
     void shouldRejectInvalidSortField() throws Exception {
-        mockMvc.perform(get("/api/incidents").param("sortBy", "createdAt"))
+        mockMvc.perform(get("/api/incidents").param("sortBy", "invalidField"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    void shouldHonorAscendingSortDirection() throws Exception {
+        Sort sort = Sort.by(Sort.Direction.ASC, "updatedAt")
+                .and(Sort.by(Sort.Direction.DESC, "id"));
+        PageRequest pageRequest = PageRequest.of(0, 10, sort);
+        when(incidentService.searchIncidents(isNull(), isNull(), eq(pageRequest)))
+                .thenReturn(new PageImpl<>(List.of(), pageRequest, 0));
+
+        mockMvc.perform(get("/api/incidents")
+                .param("sortBy", "updatedAt")
+                .param("direction", "asc"))
+                .andExpect(status().isOk());
+
+        verify(incidentService).searchIncidents(isNull(), isNull(), eq(pageRequest));
+    }
+
+    @Test
+    void shouldRejectInvalidSortDirection() throws Exception {
+        mockMvc.perform(get("/api/incidents").param("direction", "sideways"))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(incidentService);
