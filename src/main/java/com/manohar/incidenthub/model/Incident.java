@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "incidents")
@@ -67,4 +68,8 @@ public class Incident {
     public IncidentStatus getStatus() {
         return status;
     }
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 }

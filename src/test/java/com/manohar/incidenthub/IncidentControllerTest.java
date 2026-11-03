@@ -1,7 +1,11 @@
 package com.manohar.incidenthub;
 
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -11,9 +15,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import com.manohar.incidenthub.exception.IncidentNotFoundException;
 import com.manohar.incidenthub.exception.InvalidStatusTransitionException;
@@ -37,6 +46,112 @@ class IncidentControllerTest {
 
     @MockitoBean
     private InvalidTransactionException invalidTransactionException;
+
+    @Test
+    void shouldListIncidentsSuccessfully() throws Exception {
+        Incident incident = new Incident(
+                "Database connection failed",
+                "HIGH",
+                IncidentStatus.OPEN);
+        incident.setId(1L);
+        when(incidentService.searchIncidents(
+                isNull(),
+                isNull(),
+                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")))))
+                .thenReturn(new PageImpl<>(List.of(incident),
+                        PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")), 1));
+
+        mockMvc.perform(get("/api/incidents"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("Database connection failed"))
+                .andExpect(jsonPath("$.content[0].severity").value("HIGH"))
+                .andExpect(jsonPath("$.content[0].status").value("OPEN"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(1));
+
+        verify(incidentService).searchIncidents(
+                isNull(),
+                isNull(),
+                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"))));
+    }
+
+    @Test
+    void shouldListIncidentsWithSeverityFilter() throws Exception {
+        when(incidentService.searchIncidents(
+                eq("HIGH"),
+                isNull(),
+                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")))))
+                .thenReturn(new PageImpl<>(List.of(),
+                        PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")), 0));
+
+        mockMvc.perform(get("/api/incidents").param("severity", "HIGH"))
+                .andExpect(status().isOk());
+
+        verify(incidentService).searchIncidents(
+                eq("HIGH"),
+                isNull(),
+                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"))));
+    }
+
+    @Test
+    void shouldListIncidentsWithStatusFilter() throws Exception {
+        when(incidentService.searchIncidents(
+                isNull(),
+                eq("ACKNOWLEDGED"),
+                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")))))
+                .thenReturn(new PageImpl<>(List.of(),
+                        PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")), 0));
+
+        mockMvc.perform(get("/api/incidents").param("status", "ACKNOWLEDGED"))
+                .andExpect(status().isOk());
+
+        verify(incidentService).searchIncidents(
+                isNull(),
+                eq("ACKNOWLEDGED"),
+                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"))));
+    }
+
+    @Test
+    void shouldRejectNegativePageNumber() throws Exception {
+        mockMvc.perform(get("/api/incidents").param("page", "-1"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    void shouldRejectPageSizeGreaterThan100() throws Exception {
+        mockMvc.perform(get("/api/incidents").param("size", "101"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    void shouldRejectInvalidSortField() throws Exception {
+        mockMvc.perform(get("/api/incidents").param("sortBy", "createdAt"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    void shouldRejectInvalidSeverityFilter() throws Exception {
+        mockMvc.perform(get("/api/incidents").param("severity", "URGENT"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    void shouldRejectInvalidStatusFilter() throws Exception {
+        mockMvc.perform(get("/api/incidents").param("status", "CLOSED"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(incidentService);
+    }
 
     @Test
     void shouldRejectBlankTitle() throws Exception {

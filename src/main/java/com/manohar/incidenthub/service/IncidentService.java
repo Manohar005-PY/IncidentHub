@@ -2,6 +2,8 @@ package com.manohar.incidenthub.service;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.manohar.incidenthub.exception.IncidentNotFoundException;
@@ -50,5 +52,9 @@ public class IncidentService {
         }
         incident.setStatus(newStatus);
         return incident;
+    }
+    @Transactional(readOnly = true)
+    public Page<Incident> searchIncidents(String severity, String status, Pageable pageable) {
+        return incidentRepositroy.searchIncidents(severity, status, pageable);
     }
 }
