@@ -23,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.manohar.incidenthub.exception.IncidentNotFoundException;
 import com.manohar.incidenthub.exception.InvalidStatusTransitionException;
@@ -69,6 +70,7 @@ class IncidentControllerTest {
                 .andExpect(jsonPath("$.content[0].title").value("Database connection failed"))
                 .andExpect(jsonPath("$.content[0].severity").value("HIGH"))
                 .andExpect(jsonPath("$.content[0].status").value("OPEN"))
+                .andExpect(jsonPath("$.content[0].version").doesNotExist())
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.size").value(10))
                 .andExpect(jsonPath("$.totalElements").value(1));
@@ -77,6 +79,45 @@ class IncidentControllerTest {
                 isNull(),
                 isNull(),
                 eq(pageRequest));
+    }
+
+    @Test
+    void shouldGetIncidentWithoutExposingVersion() throws Exception {
+        Incident incident = new Incident(
+                "Database connection failed",
+                "HIGH",
+                IncidentStatus.OPEN);
+        incident.setId(1L);
+        when(incidentService.getIncidentById(1L)).thenReturn(Optional.of(incident));
+
+        mockMvc.perform(get("/api/incidents/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("Database connection failed"))
+                .andExpect(jsonPath("$.version").doesNotExist());
+    }
+
+    @Test
+    void shouldCreateIncidentWithoutExposingVersion() throws Exception {
+        Incident incident = new Incident(
+                "Database connection failed",
+                "HIGH",
+                IncidentStatus.OPEN);
+        incident.setId(1L);
+        when(incidentService.createIncident("Database connection failed", "HIGH"))
+                .thenReturn(incident);
+
+        mockMvc.perform(post("/api/incidents")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "title": "Database connection failed",
+                            "severity": "HIGH"
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.version").doesNotExist());
     }
 
     @Test
@@ -231,7 +272,8 @@ class IncidentControllerTest {
                 """)).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"));
+                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"))
+                .andExpect(jsonPath("$.version").doesNotExist());
     }
 
     @Test

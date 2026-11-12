@@ -3,9 +3,11 @@ package com.manohar.incidenthub;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.manohar.incidenthub.dto.CreateIncidentRequest;
+import com.manohar.incidenthub.dto.IncidentResponse;
 import com.manohar.incidenthub.dto.PageResponse;
 import com.manohar.incidenthub.dto.UpdateIncidentStatusRequest;
 import com.manohar.incidenthub.exception.InvalidIncidentQueryException;
+import com.manohar.incidenthub.mapper.IncidentMapper;
 import com.manohar.incidenthub.model.Incident;
 import com.manohar.incidenthub.model.IncidentStatus;
 import com.manohar.incidenthub.service.IncidentService;
@@ -44,33 +46,33 @@ public class IncidentController {
     }
 
     @GetMapping("/api/incidents/{id}")
-    public ResponseEntity<Incident> getIncident(@PathVariable  Long id)
+    public ResponseEntity<IncidentResponse> getIncident(@PathVariable  Long id)
     {   
         
        var result = incidentService.getIncidentById(id);
        if (result.isEmpty()){
         return ResponseEntity.notFound().build();
        }
-       return ResponseEntity.ok(result.get());
+       return ResponseEntity.ok(IncidentMapper.toResponse(result.get()));
     }
 
     @PostMapping("/api/incidents")
-    public ResponseEntity <Incident> createIncident(@Valid @RequestBody CreateIncidentRequest request) {
+    public ResponseEntity <IncidentResponse> createIncident(@Valid @RequestBody CreateIncidentRequest request) {
         Incident created = incidentService.createIncident(request.getTitle(), request.getSeverity());
 
         URI location = URI.create("/api/incidents/" + created.getId());
 
-        return ResponseEntity.created(location).body(created);
+        return ResponseEntity.created(location).body(IncidentMapper.toResponse(created));
     }
     @PatchMapping("/api/incidents/{id}/status")
-    public ResponseEntity <Incident> updateIncidentStatus(@PathVariable Long id, @RequestBody @Valid UpdateIncidentStatusRequest request){
+    public ResponseEntity <IncidentResponse> updateIncidentStatus(@PathVariable Long id, @RequestBody @Valid UpdateIncidentStatusRequest request){
         Incident updated  = incidentService.transitionStatus(id, request.getStatus());
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(IncidentMapper.toResponse(updated));
         
     }
     @GetMapping("/api/incidents")
-    public ResponseEntity<PageResponse<Incident>> getIncidents(
+    public ResponseEntity<PageResponse<IncidentResponse>> getIncidents(
         @RequestParam(required = false) String severity,
         @RequestParam(required = false) String status,
         @RequestParam(defaultValue = "0") int page,
@@ -115,7 +117,8 @@ public class IncidentController {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Page <Incident> result = incidentService.searchIncidents(severity, statusFilter != null ? statusFilter.name() : null, pageable);
-        return ResponseEntity.ok(PageResponse.from(result));
+        Page<IncidentResponse> responsePage = result.map(IncidentMapper::toResponse);
+        return ResponseEntity.ok(PageResponse.from(responsePage));
     }
 
 }

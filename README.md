@@ -92,9 +92,9 @@ On success, returns `201 Created`, the created incident as JSON, and a `Location
 
 ### Get an incident
 
-`GET /api/incident/{id}`
+`GET /api/incidents/{id}`
 
-Returns `200 OK` with the incident if it exists. Returns `404 Not Found` if there is no incident with that ID.
+Returns `200 OK` with the incident response if it exists. The response includes `id`, `title`, `severity`, `status`, `createdAt`, and `updatedAt`; it does not expose the persistence `version` field. Returns `404 Not Found` if there is no incident with that ID.
 
 ### Update incident status
 
@@ -131,7 +131,8 @@ Supported query parameters:
 | `status` | — | Optional status filter: `OPEN`, `ACKNOWLEDGED`, `INVESTIGATING`, or `RESOLVED`. Case-insensitive. |
 | `page` | `0` | Zero-based page number. Must not be negative. |
 | `size` | `10` | Page size from 1 through 100. |
-| `sortBy` | `id` | Sort field: `id`, `title`, `severity`, `status`, or `version`. Results are sorted ascending. |
+| `sortBy` | `createdAt` | Sort field: `id`, `title`, `severity`, `status`, `version`, `createdAt`, or `updatedAt`. |
+| `direction` | `desc` | Sort direction: `asc` or `desc`. When sorting by a field other than `id`, `id` is used as a descending tie-breaker. |
 
 Example:
 
@@ -148,7 +149,9 @@ Successful listing returns `200 OK` with the following page shape:
       "id": 1,
       "title": "Database connection failed",
       "severity": "HIGH",
-      "status": "OPEN"
+      "status": "OPEN",
+      "createdAt": "2026-11-03T12:30:00Z",
+      "updatedAt": "2026-11-03T12:30:00Z"
     }
   ],
   "page": 0,
@@ -158,6 +161,8 @@ Successful listing returns `200 OK` with the following page shape:
   "last": true
 }
 ```
+
+Incident response objects omit the persistence `version` field.
 
 Invalid page numbers, page sizes, sort fields, severities, or statuses return `400 Bad Request`. The controller currently uses ascending sort order; there is no query parameter for selecting the direction.
 
