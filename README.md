@@ -202,8 +202,10 @@ The tests cover service behavior and controller request/response behavior, inclu
 - Missing incidents.
 - Incident listing with severity and status filters.
 - Invalid listing parameters such as a negative page, excessive page size, unsupported sort field, and invalid filters.
+- Authentication registration, duplicate-email handling, email normalization, password encoding and UTF-8 byte limits.
+- User lookup and role mapping for Spring Security.
 
-The application context test starts the full application and therefore requires a reachable PostgreSQL instance with the configured credentials. Controller and service tests use test doubles and do not require a live database.
+Persistence and application context tests use Testcontainers to start PostgreSQL. Controller and service unit tests use test doubles and do not require a live database.
 
 ## Project layout
 

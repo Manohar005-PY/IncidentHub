@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -78,6 +80,22 @@ public class IncidentServiceTest {
         Incident incident = incidentService.transitionStatus(1L, IncidentStatus.ACKNOWLEDGED);
 
         assertEquals(IncidentStatus.ACKNOWLEDGED, incident.getStatus());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "OPEN, ACKNOWLEDGED",
+            "ACKNOWLEDGED, INVESTIGATING",
+            "INVESTIGATING, RESOLVED",
+            "RESOLVED, OPEN"
+    })
+    void shouldAllowEachValidStatusTransition(IncidentStatus currentStatus, IncidentStatus nextStatus) {
+        Incident incident = new Incident("Database connection failed", "HIGH", currentStatus);
+        when(incidentRepository.findById(1L)).thenReturn(Optional.of(incident));
+
+        Incident transitioned = incidentService.transitionStatus(1L, nextStatus);
+
+        assertEquals(nextStatus, transitioned.getStatus());
     }
 
     @Test
