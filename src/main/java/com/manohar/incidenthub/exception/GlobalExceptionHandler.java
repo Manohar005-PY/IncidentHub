@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.manohar.incidenthub.dto.ApiErrorResponse;
 
-@RestControllerAdvice 
+@RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(IncidentNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleIncidentNotFoundException(IncidentNotFoundException ex) {
@@ -17,18 +17,41 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidStatusTransitionException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidStatusTransitionException(InvalidStatusTransitionException ex){
+    public ResponseEntity<ApiErrorResponse> handleInvalidStatusTransitionException(
+            InvalidStatusTransitionException ex) {
         ApiErrorResponse error = new ApiErrorResponse(ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
     @ExceptionHandler(OptimisticLockingFailureException.class)
-    public ResponseEntity<ApiErrorResponse> handleOptimisticLockingFailureException(OptimisticLockingFailureException ex){
+    public ResponseEntity<ApiErrorResponse> handleOptimisticLockingFailureException(
+            OptimisticLockingFailureException ex) {
         ApiErrorResponse error = new ApiErrorResponse(ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
-    @ExceptionHandler (InvalidIncidentQueryException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidIncidentQueryException(InvalidIncidentQueryException ex){
+
+    @ExceptionHandler(InvalidIncidentQueryException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidIncidentQueryException(InvalidIncidentQueryException ex) {
         ApiErrorResponse error = new ApiErrorResponse(ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateEmail(
+            EmailAlreadyRegisteredException exception) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidRegistrationRequestException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidRegistration(
+            InvalidRegistrationRequestException exception) {
+
+        return ResponseEntity
+                .badRequest()
+                .body(new ApiErrorResponse(exception.getMessage()));
+    }
+
 }
